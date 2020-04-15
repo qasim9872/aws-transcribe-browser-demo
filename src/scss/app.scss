@@ -35,8 +35,8 @@ header {
   margin: 20px;
   color: $caption-color;
   text-align: center;
-  background: $foreground-color url('../images/design/heading.png') center 20px no-repeat;
-  padding: 60px 30px 30px;
+  background: $foreground-color center 20px no-repeat;
+  padding: 30px 30px 30px;
   background-size: 160px;
 }
 
@@ -58,3 +58,46 @@ address {
   margin: 0 auto;
   display: block;
 }
+
+// component styles
+
+.settings-window {
+  // font-size: 1em;
+  margin: 20px;
+  background: $foreground-color;
+  padding: 30px 30px 30px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.settings-window > div {
+  color: $caption-color;
+  font-size: x-large;
+  margin: 10px;
+  padding: 20px;
+  border-style: groove;
+  border-color: $accent-color;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-window > div > div {
+  font-size: 18px;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
+
+.settings-window > div > div > input {
+  padding: 8px 0px 8px;
+  margin: 5px 0px 5px;
+  display: block;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  width: 100%;
+}
+
+// .settings-window > div > label {
+//   al
+// }
