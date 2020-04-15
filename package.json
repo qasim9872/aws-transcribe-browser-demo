@@ -40,7 +40,9 @@
     "node": ">=10.13.0"
   },
   "dependencies": {
-    "autoprefixer": "^9.7.5"
+    "autoprefixer": "^9.7.5",
+    "aws-transcribe": "file:/Users/Muhammad.qasim/development-workspace/personal/aws-transcribe",
+    "regenerator-runtime": "^0.13.5"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
