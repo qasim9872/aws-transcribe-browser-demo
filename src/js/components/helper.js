@@ -69,9 +69,11 @@ export function getAwsConfig() {
 export function getTranscribeConfig() {
   const languageElem = document.getElementById('language');
   const regionElem = document.getElementById('region');
+  const sampleRateElem = document.getElementById('sampleRate');
 
   return {
-    language: languageElem.value,
+    languageCode: languageElem.value,
     region: regionElem.value,
+    sampleRate: sampleRateElem.value,
   };
 }

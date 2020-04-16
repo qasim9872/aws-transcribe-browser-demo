@@ -1,7 +1,7 @@
+import { AwsTranscribe } from 'aws-transcribe';
 import { downsampleBuffer, getAwsConfig, getTranscribeConfig } from './helper';
 
 const bufferSize = 8192;
-const sampleRateHertz = 16000;
 
 const constraints = {
   audio: true,
@@ -33,6 +33,7 @@ class StreamingManager {
     this.processor = null;
     this.input = null;
     this.globalStream = null;
+    this.recognizedText = [];
   }
 
   init() {
@@ -62,7 +63,11 @@ class StreamingManager {
     this.processor.onaudioprocess = (e) => {
       const buffer = e.inputBuffer.getChannelData(0);
 
-      const pcmBuffer = downsampleBuffer(buffer, 44100, sampleRateHertz);
+      const pcmBuffer = downsampleBuffer(
+        buffer,
+        44100,
+        this.transcribeConfig.sampleRate
+      );
 
       this.sendAudioBuffer(pcmBuffer);
     };
@@ -71,33 +76,104 @@ class StreamingManager {
     this.processor.connect(this.context.destination);
   }
 
-  sendAudioBuffer(buffer) {
-    console.log(`sending audio`);
+  sendAudioBuffer(chunk) {
+    // eslint-disable-next-line no-underscore-dangle
+    this.transcribeStream._write(chunk);
   }
 
-  async startStreaming() {
-    console.log('start streaming');
-    this.toggleButtons(true);
-
+  async connectToTranscribe() {
     this.awsConfig = getAwsConfig();
     this.transcribeConfig = getTranscribeConfig();
 
-    // TODO - create transcribe client
+    console.log('aws config', this.awsConfig);
+    this.client = new AwsTranscribe(this.awsConfig);
 
-    if (!this.processor) {
-      this.setupAudioProcessor();
+    console.log('client created');
+
+    console.log('aws transcribe config', this.transcribeConfig);
+    this.transcribeStream = this.client.createStreamingClient(
+      this.transcribeConfig
+    );
+
+    this.transcribeStream.on('open', () => {
+      console.log('connected');
+    });
+
+    this.transcribeStream.on('data', (data) => {
+      const results = data.Transcript.Results;
+
+      if (!results || results.length === 0) {
+        return;
+      }
+
+      const result = results[0];
+      const final = !result.IsPartial;
+      const prefix = final ? 'recognized' : 'recognizing';
+      const text = result.Alternatives[0].Transcript;
+      console.log(`${prefix} text: ${text}`);
+
+      this.addTextToDisplay(text, final);
+    });
+
+    this.transcribeStream.on('error', (error) => {
+      console.log('error occurred', error);
+      this.stopStreaming();
+      // eslint-disable-next-line no-alert
+      alert('transcribe error occurred, view the console for details');
+    });
+
+    this.transcribeStream.on('close', (...args) => {
+      console.log('closed', ...args);
+    });
+  }
+
+  addTextToDisplay(text, final) {
+    const newTextDisplay = [...this.recognizedText, text].join(' ');
+    this.displayText.value = newTextDisplay;
+
+    if (final) {
+      this.recognizedText.push(text);
     }
+  }
 
-    if (this.context.state === 'suspended') {
-      this.context.resume();
+  resetDisplay() {
+    this.recognizedText = [];
+    this.displayText.value = '';
+  }
+
+  async startStreaming() {
+    try {
+      console.log('start streaming');
+
+      this.resetDisplay();
+      await this.connectToTranscribe();
+
+      if (!this.processor) {
+        this.setupAudioProcessor();
+      }
+
+      if (this.context.state === 'suspended') {
+        this.context.resume();
+      }
+
+      // create a reference to the stream so we can close it after
+      this.globalStream = await navigator.mediaDevices.getUserMedia(
+        constraints
+      );
+
+      // setup an input from the stream and connect it to the processor
+      this.input = this.context.createMediaStreamSource(this.globalStream);
+      this.input.connect(this.processor);
+
+      // Do this at the end so if there is an error, we don't have to disable it again
+      this.toggleButtons(true);
+    } catch (err) {
+      console.log(err);
+      // eslint-disable-next-line no-alert
+      alert(
+        'an error occured while starting the stream, view the console for errors'
+      );
     }
-
-    // create a reference to the stream so we can close it after
-    this.globalStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-    // setup an input from the stream and connect it to the processor
-    this.input = this.context.createMediaStreamSource(this.globalStream);
-    this.input.connect(this.processor);
   }
 
   stopStreaming() {
@@ -106,15 +182,21 @@ class StreamingManager {
 
     // request to stop recognition
     this.globalStream.getTracks()[0].stop();
-    this.globalStream = null;
+    this.globalStream = undefined;
 
     // input needs to be created from the global stream which may change so we can disconnect the last input
     this.input.disconnect(this.processor);
-    this.input = null;
+    this.input = undefined;
 
     // disconnect the processor so there's nothing happening in h
     this.processor.disconnect(this.context.destination);
-    this.processor = null;
+    this.processor = undefined;
+
+    // close the transcribe connection
+    this.transcribeStream.removeAllListeners();
+    this.transcribeStream.destroy();
+    this.transcribeStream = undefined;
+    this.client = undefined;
   }
 
   toggleButtons(streaming) {
