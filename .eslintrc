@@ -2,6 +2,7 @@
   "extends": "airbnb",
   "env": {
     "node": true,
+    "browser": true,
     "jasmine": true,
     "jquery": true
   },
@@ -28,7 +29,9 @@
     ],
     "import/no-unresolved": 0,
     "import/extensions": 0,
-    "no-console": 0
+    "no-console": 0,
+    "operator-linebreak": 0,
+    "no-plusplus": 0
   },
   "globals": {
     "browser": false,
