@@ -1,6 +1,6 @@
 export function addInputElements(inputFieldDiv, inputs) {
   for (const input of inputs) {
-    const { id, name, type } = input;
+    const { id, name, type, value } = input;
 
     const labelElement = document.createElement('label');
     labelElement.textContent = name;
@@ -8,6 +8,9 @@ export function addInputElements(inputFieldDiv, inputs) {
 
     const inputElement = document.createElement('input');
     inputElement.id = id;
+    if (value) {
+      inputElement.value = value;
+    }
     inputElement.placeholder = `${name} Here`;
     inputElement.type = type;
     inputFieldDiv.appendChild(inputElement);

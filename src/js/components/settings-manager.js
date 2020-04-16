@@ -1,5 +1,11 @@
 import { createDisplayElements } from './helper';
 
+const defaults = {
+  language: 'en-US',
+  region: 'eu-west-1',
+  sampleRate: 16000,
+};
+
 class SettingsManager {
   init() {
     this.manager = document.getElementById('settings-manager');
@@ -39,10 +45,17 @@ class SettingsManager {
       {
         name: 'Language',
         id: 'language',
+        value: defaults.language,
       },
       {
         name: 'Region',
         id: 'region',
+        value: defaults.region,
+      },
+      {
+        name: 'Sample Rate',
+        id: 'sampleRate',
+        value: defaults.sampleRate,
       },
     ]);
 
