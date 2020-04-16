@@ -62,7 +62,6 @@ address {
 // component styles
 
 .settings-window {
-  // font-size: 1em;
   margin: 20px;
   background: $foreground-color;
   padding: 30px 30px 30px;
@@ -98,6 +97,48 @@ address {
   width: 100%;
 }
 
-// .settings-window > div > label {
-//   al
-// }
+.streaming-window {
+  // font-size: 1em;
+  margin: 20px;
+  background: $foreground-color;
+  padding: 30px 30px 30px;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  align-items: center;
+}
+
+.streaming-window > h1 {
+  color: $caption-color;
+  font-size: xx-large;
+  padding: 10px;
+}
+
+.action-button {
+  border: none;
+  color: $foreground-color;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+
+  &.start {
+    background-color: #4caf50; /* Green */
+  }
+
+  &.stop {
+    background-color: #f44336; /* Red */
+  }
+
+  &:disabled {
+    background-color: #e7e7e7; /* Grey */
+    cursor: not-allowed;
+  }
+}
+
+.display-text-window {
+  width: 100%;
+}
