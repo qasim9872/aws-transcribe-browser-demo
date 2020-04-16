@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "autoprefixer": "^9.7.5",
-    "aws-transcribe": "file:/Users/Muhammad.qasim/development-workspace/personal/aws-transcribe",
+    "aws-transcribe": "git://github.com/qasim9872/aws-transcribe.git#feature/browser-support",
     "regenerator-runtime": "^0.13.5"
   },
   "devDependencies": {
