@@ -41,8 +41,8 @@
   },
   "dependencies": {
     "autoprefixer": "^9.7.5",
-    "aws-transcribe": "git://github.com/qasim9872/aws-transcribe.git#feature/browser-support",
-    "regenerator-runtime": "^0.13.5"
+    "regenerator-runtime": "^0.13.5",
+    "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

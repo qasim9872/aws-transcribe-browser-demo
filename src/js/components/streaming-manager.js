@@ -1,7 +1,8 @@
-import { AwsTranscribe } from 'aws-transcribe';
+import SocketClient from 'socket.io-client';
 import { downsampleBuffer, getAwsConfig, getTranscribeConfig } from './helper';
 
 const bufferSize = 8192;
+const ServerUrl = 'ws://localhost:5000';
 
 const constraints = {
   audio: true,
@@ -78,7 +79,8 @@ class StreamingManager {
 
   sendAudioBuffer(chunk) {
     // eslint-disable-next-line no-underscore-dangle
-    this.transcribeStream._write(chunk);
+    // this.transcribeStream._write(chunk);
+    this.socketClient.emit('speech_to_text', chunk);
   }
 
   async connectToTranscribe() {
@@ -86,44 +88,46 @@ class StreamingManager {
     this.transcribeConfig = getTranscribeConfig();
 
     console.log('aws config', this.awsConfig);
-    this.client = new AwsTranscribe(this.awsConfig);
 
-    console.log('client created');
+    this.socketClient = new SocketClient(ServerUrl);
+    console.log('socket client created');
 
-    console.log('aws transcribe config', this.transcribeConfig);
-    this.transcribeStream = this.client.createStreamingClient(
-      this.transcribeConfig
-    );
+    // this.client = new AwsTranscribe(this.awsConfig);
+    // console.log('aws transcribe config', this.transcribeConfig);
+    // this.transcribeStream = this.client.createStreamingClient(
+    //   this.transcribeConfig
+    // );
 
-    this.transcribeStream.on('open', () => {
-      console.log('connected');
+    this.socketClient.on('connect', () => {
+      console.log('socket connected - sending config');
+
+      this.socketClient.emit('start', {
+        awsConfig: this.awsConfig,
+        transcribeConfig: this.transcribeConfig,
+      });
     });
 
-    this.transcribeStream.on('data', (data) => {
-      const results = data.Transcript.Results;
-
-      if (!results || results.length === 0) {
-        return;
-      }
-
-      const result = results[0];
-      const final = !result.IsPartial;
+    this.socketClient.on('result', ({ final, text }) => {
       const prefix = final ? 'recognized' : 'recognizing';
-      const text = result.Alternatives[0].Transcript;
+
       console.log(`${prefix} text: ${text}`);
 
       this.addTextToDisplay(text, final);
     });
 
-    this.transcribeStream.on('error', (error) => {
+    this.socketClient.on('error', (error) => {
       console.log('error occurred', error);
       this.stopStreaming();
       // eslint-disable-next-line no-alert
       alert('transcribe error occurred, view the console for details');
     });
 
-    this.transcribeStream.on('close', (...args) => {
-      console.log('closed', ...args);
+    this.socketClient.on('disconnect', (...args) => {
+      console.log('socket disconnected', ...args);
+    });
+
+    this.socketClient.on('close', (...args) => {
+      console.log('socket closed', ...args);
     });
   }
 
@@ -193,10 +197,14 @@ class StreamingManager {
     this.processor = undefined;
 
     // close the transcribe connection
-    this.transcribeStream.removeAllListeners();
-    this.transcribeStream.destroy();
-    this.transcribeStream = undefined;
-    this.client = undefined;
+    // this.transcribeStream.removeAllListeners();
+    // this.transcribeStream.destroy();
+    // this.transcribeStream = undefined;
+    // this.client = undefined;
+
+    // close socket connection
+    this.socketClient.close(1000);
+    this.socketClient.removeAllListeners();
   }
 
   toggleButtons(streaming) {
